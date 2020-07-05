@@ -13,3 +13,6 @@ Each category is seperated by another underscore
 # Initial Import
 Create an initial Database out of a given Folder.
 Creates Categories in Folder, adds Metadatas to Folders...
+
+# Version Control
+Version Control with SVN (only local)
