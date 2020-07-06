@@ -1,28 +1,35 @@
 # slice
 Smotastic Lightweight Image Control Envrionment
 
-Application to manage all your local Images in a controlled environment
+Application to manage all your local Images in a controlled environment.
+User can add, delete and edit images and upload them to a local filesystem.
+The images can then be categorized and filtered or sorted.
 
 # Architectural Design
-Database (OR JUST METADATA FILE as in JSON???) manages Categories, Folders and Images.
+There is no need for a database, all data will be managed by metadata files for each folder.
+The metadata is a simple JSON file which manages the categories for each image.
 
-## Image
-Image contains the following Attributes
-* ID -> technical ID of the entry (auto-generated)
-* Name -> The same name as the uploaded image
-* Categories 1..n -> A list of category references, to which the image belongs
-* Folder n..1 -> The folder reference in which the image resides
+For each uploaded image, the image will be placed in a folder, where the name is the birthdate of the image.
+For each folder, one metadata file exists in this folder.
 
-## Folder
-FOLDER containes the following Attributes
-* ID -> technical ID of the entry (auto-generated)
-* Name -> The name of the folder
-* Google_Folder_Id -> If Google Drive Sync is activated, the FolderId of the Google Drive Folder where this Folder is synchronized to
+The metadata contains two objects.
 
-## Category
-CATEGORY containes the following Attributes
-* ID -> technical ID of the entry (auto-generated)
-* Name -> The name of the category
+## Image Categories
+The **Image Categories** object contains all images in this folder as a key, and the value is an array of the categories for each image.
+``
+{
+    "image_001": ["Nature", "Animal"],
+    "image_002": ["Nature", "Black Forest"],
+    "image_003": ["Summerfestival"]
+}
+``
+
+## Google Drive Sync
+The optional **Google Drive Sync Folder ID** is the id of the GDrive Folder where the pictures will be synced to.
+
+``
+{"google_drive_sync_folder_id": "abcdef001002"}
+``
 
 # Functional Requirements
 
@@ -35,7 +42,7 @@ Optionally a Google Drive Sync can be activated. This means that every uploaded 
 
 
 
-# Import
+# DEPRECATED Import
 Create an initial Database out of a given Folder.
 
 The subfolders in the selected Folder always have to follow a predetermined Pattern *{YYYY_MM_DD}_{category...}*
@@ -69,45 +76,55 @@ Exports all images in a format, so the images can be viewed without the help of 
 
 
 # Add Image
-The User is able to select images from his local machine, and upload them to the application. 
-Once the image is uploaded, the user can select, or create new categories for this image.
-Then the user confirms his image, the *Synchronization* Process begins
+The User is able to select images or folders from his local machine, and upload all images to the selected SOURCE_FOLDER. 
+
+If a folder was selected, each image will then recursively be selected for the upload process.
+
+Additionally the user can select, or create new categories for each image, which is about to be uploaded.
+
+Then the user confirms the upload of his image, the *Synchronization* Process begins
 
 
 # Synchronization
-Then the user adds, or updates a given image a series of synchronization rules has to be followed:
+Then the user adds, deletes or updates a given image a series of synchronization rules has to be followed:
 
 ## Synchronize Physical Copy
+
+
+### Add Image
 The uploaded image is copied to the configured SOURCE_FOLDER, in a subfolder where the name is the birthdate of the image.
 
-## Synchronize FOLDER
-A database entry in the table FOLDER exists.
-If the FOLDER entry did not exist before, one will be created with the following required columns set:
-* **Name** of the folder is the name of the created subfolder
+### Delete Image
+The uploaded image is removed from the subfolder of the configured SOURCE_FOLDER.
+
+## Synchronize Metadata
+A *metadata.json* file exists for each folder.
+The metadata contains an object of all synchronized images, where the key is the name of the synchronized image, and the value an array of the selected categories of the user.
+
+### Add Image
+If a *metadata.json* does not exist in the folder, a new metadata.json file must be created.
+The newly added image, will be appended at the end of the *images* object in the metadata file, with all the selected categories for this image.
+
+### Delete Image
+The entry in the *metadata.json* will be removed from the images object.
+
+### Update Image
+The categories array of the entry of the edited image will be updated with the newly selected or removed categories of the user.
+
+## Synchronize Globalmetadata
+At the root in the SOURCE_FOLDER a *global-metadata.json* file exists.
+This file contains the following objects:
+
+* A distinct **categories** array, which contains all globally used categories in each image
 
 
-## Synchronize CATEGORY(ies)
-Database entries for each category in the table CATEGORY exists.
-If new categories there added in the synchronization of the image, every new category will be added to the CATEGORY table.
-The required columns for each new category are as follows:
-* The **Name** of the category, as the user entered it
 
-## Synchronize IMAGE
-A database entry in the table IMAGE exists.
-The required columns which are to be filled are as follows:
-* The **Name** Column is the same as the synchronized image
-* The **Categories** References are set
-* The **Folder** Reference, is the reference where the foldername is the same as the birthdate of the image
-
-
-
-## TODO Show Images
+## Show Images
 The user is able to view all previously uploaded images.
 
 The user can filter his view of images:
 * By creation Date (listbox)
 * By categories (listbox)
-
 
 
 # Version Control
